@@ -16,3 +16,4 @@ export { WorkflowHasIssuesError } from './errors/workflow-has-issues.error';
 export * from './interfaces';
 export * from './node-execute-functions';
 export { NodeExecuteFunctions };
+export * from './queue';
