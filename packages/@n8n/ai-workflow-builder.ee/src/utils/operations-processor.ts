@@ -3,6 +3,20 @@ import type { INode, IConnections } from 'n8n-workflow';
 import type { SimpleWorkflow, WorkflowOperation } from '../types/workflow';
 import type { WorkflowState } from '../workflow-state';
 
+const OPERATION_PRIORITY: Record<WorkflowOperation['type'], number> = {
+        clear: 0,
+        removeNode: 1,
+        setConnections: 2,
+        mergeConnections: 3,
+        addNodes: 4,
+        updateNode: 5,
+        setName: 6,
+};
+
+function sortOperations(operations: WorkflowOperation[]): WorkflowOperation[] {
+        return operations.slice().sort((a, b) => OPERATION_PRIORITY[a.type] - OPERATION_PRIORITY[b.type]);
+}
+
 /**
  * Apply a list of operations to a workflow
  */
@@ -18,12 +32,11 @@ export function applyOperations(
 		name: workflow.name || '',
 	};
 
-	// Apply each operation in sequence
-	for (const operation of operations) {
-		switch (operation.type) {
-			case 'clear':
-				result = { nodes: [], connections: {}, name: '' };
-				break;
+        for (const operation of sortOperations(operations)) {
+                switch (operation.type) {
+                        case 'clear':
+                                result = { nodes: [], connections: {}, name: '' };
+                                break;
 
 			case 'removeNode': {
 				const nodesToRemove = new Set(operation.nodeIds);
