@@ -21,6 +21,7 @@ import AssistantIcon from '@n8n/design-system/components/AskAssistantIcon/Assist
 import { useI18n } from '@n8n/i18n';
 import { useTelemetry } from '@/composables/useTelemetry';
 import { useAssistantStore } from '@/stores/assistant.store';
+import { useAiSuggestions } from '@/composables/useAiSuggestions';
 
 type Props = {
 	nodeViewScale: number;
@@ -46,6 +47,7 @@ const focusPanelStore = useFocusPanelStore();
 const i18n = useI18n();
 const telemetry = useTelemetry();
 const assistantStore = useAssistantStore();
+const { requestSuggestions } = useAiSuggestions();
 
 const { getAddedNodesAndConnections } = useActions();
 
@@ -100,6 +102,10 @@ function onAskAssistantButtonClick() {
 
 	assistantStore.toggleChatOpen();
 }
+
+function onSuggestClick() {
+	void requestSuggestions();
+}
 </script>
 
 <template>
@@ -115,6 +121,15 @@ function onAskAssistantButtonClick() {
 				type="tertiary"
 				data-test-id="node-creator-plus-button"
 				@click="openNodeCreator"
+			/>
+		</KeyboardShortcutTooltip>
+		<KeyboardShortcutTooltip label="AI Suggestions" placement="left">
+			<n8n-icon-button
+				size="large"
+				type="tertiary"
+				icon="sparkles"
+				data-test-id="ai-suggestions-button"
+				@click="onSuggestClick"
 			/>
 		</KeyboardShortcutTooltip>
 		<KeyboardShortcutTooltip
