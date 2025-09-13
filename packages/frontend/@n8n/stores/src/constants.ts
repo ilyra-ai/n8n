@@ -22,6 +22,7 @@ export const STORES = {
 	RBAC: 'rbac',
 	PUSH: 'push',
 	COLLABORATION: 'collaboration',
+	WORKFLOW_COLLAB: 'workflowCollab',
 	ASSISTANT: 'assistant',
 	BUILDER: 'builder',
 	BECOME_TEMPLATE_CREATOR: 'becomeTemplateCreator',

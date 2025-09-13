@@ -12,6 +12,7 @@ export * from './instance-settings';
 export * from './nodes-loader';
 export * from './utils';
 export { WorkflowHasIssuesError } from './errors/workflow-has-issues.error';
+export * from './workflow-ws.service';
 
 export * from './interfaces';
 export * from './node-execute-functions';

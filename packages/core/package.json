@@ -75,6 +75,7 @@
     "uuid": "catalog:",
     "winston": "3.14.2",
     "xml2js": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "ws": "catalog:"
   }
 }
