@@ -55,6 +55,7 @@ const SetupWorkflowFromTemplateView = async () =>
 const TemplatesSearchView = async () => await import('@/views/TemplatesSearchView.vue');
 const VariablesView = async () => await import('@/views/VariablesView.vue');
 const SettingsUsageAndPlan = async () => await import('./views/SettingsUsageAndPlan.vue');
+const SettingsLicenseView = async () => await import('./views/SettingsLicenseView.vue');
 const SettingsSso = async () => await import('./views/SettingsSso.vue');
 const SignoutView = async () => await import('@/views/SignoutView.vue');
 const SamlOnboarding = async () => await import('@/views/SamlOnboarding.vue');
@@ -512,13 +513,31 @@ export const routes: RouteRecordRaw[] = [
 							};
 						},
 					},
-				},
-			},
-			{
-				path: 'personal',
-				name: VIEWS.PERSONAL_SETTINGS,
-				components: {
-					settingsView: SettingsPersonalView,
+                                },
+                        },
+                        {
+                                path: 'license',
+                                name: VIEWS.LICENSE_SETTINGS,
+                                components: {
+                                        settingsView: SettingsLicenseView,
+                                },
+                                meta: {
+                                        middleware: ['authenticated'],
+                                        telemetry: {
+                                                pageCategory: 'settings',
+                                                getProperties() {
+                                                        return {
+                                                                feature: 'license',
+                                                        };
+                                                },
+                                        },
+                                },
+                        },
+                        {
+                                path: 'personal',
+                                name: VIEWS.PERSONAL_SETTINGS,
+                                components: {
+                                        settingsView: SettingsPersonalView,
 				},
 				meta: {
 					middleware: ['authenticated'],

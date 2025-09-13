@@ -20,5 +20,6 @@
 	"settings.usageAndPlan.license.activation.error.title": "Falha na ativação",
 	"settings.usageAndPlan.license.activation.success.title": "Licença ativada",
 	"settings.usageAndPlan.license.activation.success.message": "Seu {name} {type} foi ativado com sucesso.",
-	"settings.usageAndPlan.license.communityRegistered.tooltip": "Você registrou seu email para desbloquear recursos adicionais no seu plano comunitário"
+        "settings.usageAndPlan.license.communityRegistered.tooltip": "Você registrou seu email para desbloquear recursos adicionais no seu plano comunitário",
+        "settings.license": "Licença"
 }
