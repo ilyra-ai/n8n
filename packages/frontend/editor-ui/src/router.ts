@@ -38,6 +38,7 @@ const WorkflowExecutionsPreview = async () =>
 	await import('@/components/executions/workflow/WorkflowExecutionsPreview.vue');
 const SettingsView = async () => await import('./views/SettingsView.vue');
 const SettingsLdapView = async () => await import('./views/SettingsLdapView.vue');
+const MetricsDashboard = async () => await import('./views/MetricsDashboard.vue');
 const SettingsPersonalView = async () => await import('./views/SettingsPersonalView.vue');
 const SettingsUsersView = async () => await import('./views/SettingsUsersView.vue');
 const SettingsCommunityNodesView = async () =>
@@ -80,6 +81,17 @@ export const routes: RouteRecordRaw[] = [
 	{
 		path: '/',
 		redirect: '/home/workflows',
+		meta: {
+			middleware: ['authenticated'],
+		},
+	},
+	{
+		path: '/metrics',
+		name: VIEWS.METRICS,
+		components: {
+			default: MetricsDashboard,
+			sidebar: MainSidebar,
+		},
 		meta: {
 			middleware: ['authenticated'],
 		},

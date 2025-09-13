@@ -63,6 +63,7 @@ import { ErrorReporter } from '@/errors/error-reporter';
 import { WorkflowHasIssuesError } from '@/errors/workflow-has-issues.error';
 import * as NodeExecuteFunctions from '@/node-execute-functions';
 import { isJsonCompatible } from '@/utils/is-json-compatible';
+import { recordLatency, recordError, recordThroughput } from '@/metrics';
 
 import { ExecuteContext, PollContext } from './node-execution-context';
 import {
@@ -2296,7 +2297,10 @@ export class WorkflowExecute {
 							);
 						}
 					}
-
+					const duration = Date.now() - startedAt.getTime();
+					void recordLatency(workflow.id, duration);
+					void recordThroughput(1);
+					void recordError(workflow.id, error.message);
 					return fullRunData;
 				});
 
@@ -2376,6 +2380,10 @@ export class WorkflowExecute {
 		closeFunction?: Promise<void>,
 	): Promise<IRun> {
 		const fullRunData = this.getFullRunData(startedAt);
+		const duration = Date.now() - startedAt.getTime();
+		void recordLatency(workflow.id, duration);
+		void recordThroughput(1);
+		if (executionError) void recordError(workflow.id, executionError.message);
 
 		if (executionError !== undefined) {
 			Logger.debug('Workflow execution finished with error', {
