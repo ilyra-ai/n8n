@@ -38,11 +38,12 @@ describe('NodeSearchTool', () => {
 				description: 'Starts workflow on webhook call',
 			}),
 			nodeTypes.setNode,
-			nodeTypes.ifNode,
-			nodeTypes.mergeNode,
-			// AI nodes
-			nodeTypes.openAiModel,
-			nodeTypes.agent,
+                        nodeTypes.ifNode,
+                        nodeTypes.mergeNode,
+                        nodeTypes.sendEmail,
+                        // AI nodes
+                        nodeTypes.openAiModel,
+                        nodeTypes.agent,
 			createNodeType({
 				name: '@n8n/n8n-nodes-langchain.toolCalculator',
 				displayName: 'Calculator Tool',
@@ -314,8 +315,8 @@ describe('NodeSearchTool', () => {
 			expect(message).toContain('<node_name>@n8n/n8n-nodes-langchain.vectorStore</node_name>');
 		});
 
-		it('should handle case-insensitive search', async () => {
-			const mockConfig = createToolConfig('search_nodes', 'test-call-12');
+                it('should handle case-insensitive search', async () => {
+                        const mockConfig = createToolConfig('search_nodes', 'test-call-12');
 
 			const result = await nodeSearchTool.invoke(
 				{
@@ -329,10 +330,24 @@ describe('NodeSearchTool', () => {
 
 			expectToolSuccess(content, 'Found');
 			expect(message).toContain('<node_name>n8n-nodes-base.code</node_name>');
-			expect(message).toContain('<node_name>@n8n/n8n-nodes-langchain.toolCode</node_name>');
-		});
+                        expect(message).toContain('<node_name>@n8n/n8n-nodes-langchain.toolCode</node_name>');
+                });
 
-		it('should respect result limit', async () => {
+                it('should search nodes by synonym', async () => {
+                        const mockConfig = createToolConfigWithWriter('search_nodes', 'test-call-17');
+                        const result = await nodeSearchTool.invoke(
+                                {
+                                        queries: [buildNodeSearchQuery('name', 'enviar')],
+                                },
+                                mockConfig,
+                        );
+                        const content = parseToolResult<ParsedToolContent>(result);
+                        const message = content.update.messages[0]?.kwargs.content;
+                        expectToolSuccess(content, 'Found');
+                        expect(message).toContain('<node_name>n8n-nodes-base.emailSend</node_name>');
+                });
+
+                it('should respect result limit', async () => {
 			// Add many nodes that would match
 			const manyHttpNodes = Array.from({ length: 20 }, (_, i) =>
 				createNodeType({

@@ -58,16 +58,22 @@ describe('NodeSearchEngine', () => {
 				inputs: [],
 				outputs: ['ai_memory'],
 			}),
-			createNodeType({
-				name: 'n8n-nodes-base.httpBin',
-				displayName: 'HTTP Bin',
-				description: 'Test HTTP requests with httpbin.org',
-				group: ['input'],
-				codex: {
-					alias: ['httpbin', 'request bin'],
-				},
-			}),
-		];
+                        createNodeType({
+                                name: 'n8n-nodes-base.httpBin',
+                                displayName: 'HTTP Bin',
+                                description: 'Test HTTP requests with httpbin.org',
+                                group: ['input'],
+                                codex: {
+                                        alias: ['httpbin', 'request bin'],
+                                },
+                        }),
+                        createNodeType({
+                                name: 'n8n-nodes-base.emailSend',
+                                displayName: 'Send Email',
+                                description: 'Send an email message',
+                                group: ['output'],
+                        }),
+                ];
 
 		searchEngine = new NodeSearchEngine(nodeTypes);
 	});
@@ -115,17 +121,22 @@ describe('NodeSearchEngine', () => {
 			expect(results[0].score).toBeGreaterThanOrEqual(SCORE_WEIGHTS.ALIAS_CONTAINS);
 		});
 
-		it('should handle case-insensitive search', () => {
-			const resultsLower = searchEngine.searchByName('webhook');
-			const resultsUpper = searchEngine.searchByName('WEBHOOK');
-			const resultsMixed = searchEngine.searchByName('WebHook');
+                it('should handle case-insensitive search', () => {
+                        const resultsLower = searchEngine.searchByName('webhook');
+                        const resultsUpper = searchEngine.searchByName('WEBHOOK');
+                        const resultsMixed = searchEngine.searchByName('WebHook');
 
 			expect(resultsLower).toHaveLength(1);
 			expect(resultsUpper).toHaveLength(1);
 			expect(resultsMixed).toHaveLength(1);
 			expect(resultsLower[0].name).toBe(resultsUpper[0].name);
-			expect(resultsLower[0].name).toBe(resultsMixed[0].name);
-		});
+                        expect(resultsLower[0].name).toBe(resultsMixed[0].name);
+                });
+
+                it('should match synonyms', () => {
+                        const results = searchEngine.searchByName('enviar');
+                        expect(results.some((r) => r.name === 'n8n-nodes-base.emailSend')).toBe(true);
+                });
 
 		it('should return empty array for no matches', () => {
 			const results = searchEngine.searchByName('nonexistent');

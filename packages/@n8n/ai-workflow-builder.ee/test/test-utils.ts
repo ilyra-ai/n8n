@@ -173,32 +173,38 @@ export const nodeTypes = {
 			},
 		],
 	}),
-	mergeNode: createNodeType({
-		displayName: 'Merge',
-		name: 'n8n-nodes-base.merge',
-		group: ['transform'],
-		inputs: ['main', 'main'],
-		outputs: ['main'],
-		inputNames: ['Input 1', 'Input 2'],
-		properties: [
-			{
-				displayName: 'Mode',
-				name: 'mode',
-				type: 'options',
-				options: [
-					{ name: 'Append', value: 'append' },
-					{ name: 'Merge By Index', value: 'mergeByIndex' },
-					{ name: 'Merge By Key', value: 'mergeByKey' },
-				],
-				default: 'append',
-			},
-		],
-	}),
-	vectorStoreNode: createNodeType({
-		displayName: 'Vector Store',
-		name: '@n8n/n8n-nodes-langchain.vectorStore',
-		subtitle: '={{$parameter["mode"] === "retrieve" ? "Retrieve" : "Insert"}}',
-		group: ['transform'],
+        mergeNode: createNodeType({
+                displayName: 'Merge',
+                name: 'n8n-nodes-base.merge',
+                group: ['transform'],
+                inputs: ['main', 'main'],
+                outputs: ['main'],
+                inputNames: ['Input 1', 'Input 2'],
+                properties: [
+                        {
+                                displayName: 'Mode',
+                                name: 'mode',
+                                type: 'options',
+                                options: [
+                                        { name: 'Append', value: 'append' },
+                                        { name: 'Merge By Index', value: 'mergeByIndex' },
+                                        { name: 'Merge By Key', value: 'mergeByKey' },
+                                ],
+                                default: 'append',
+                        },
+                ],
+        }),
+        sendEmail: createNodeType({
+                displayName: 'Send Email',
+                name: 'n8n-nodes-base.emailSend',
+                description: 'Send email',
+                group: ['output'],
+        }),
+        vectorStoreNode: createNodeType({
+                displayName: 'Vector Store',
+                name: '@n8n/n8n-nodes-langchain.vectorStore',
+                subtitle: '={{$parameter["mode"] === "retrieve" ? "Retrieve" : "Insert"}}',
+                group: ['transform'],
 		inputs: `={{ ((parameter) => {
 			function getInputs(parameters) {
 				const mode = parameters?.mode;
