@@ -1,6 +1,12 @@
 /** @type {import('jest').Config} */
+const base = require('../../jest.config');
+
 module.exports = {
-	...require('../../jest.config'),
+	...base,
 	globalSetup: '<rootDir>/test/setup.ts',
 	setupFilesAfterEnv: ['<rootDir>/test/setup-mocks.ts'],
+	moduleNameMapper: {
+		...base.moduleNameMapper,
+		'^@utils/(.*)$': '<rootDir>/../nodes-base/dist/utils/$1',
+	},
 };
