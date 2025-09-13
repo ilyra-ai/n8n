@@ -7,6 +7,7 @@ import { GlobalConfig } from '@n8n/config';
 import { Service } from '@n8n/di';
 import { AiAssistantClient } from '@n8n_io/ai-assistant-sdk';
 import { assert, type IUser } from 'n8n-workflow';
+import { requestSuggestions } from 'n8n-core';
 
 import { N8N_VERSION } from '../constants';
 import { License } from '../license';
@@ -75,5 +76,9 @@ export class AiService {
 		assert(this.client, 'Assistant client not setup');
 
 		return await this.client.generateAiCreditsCredentials(user);
+	}
+
+	async getSuggestions(prompt: string) {
+		return await requestSuggestions(prompt);
 	}
 }

@@ -221,4 +221,15 @@ export class AiController {
 			throw new InternalServerError(e.message, e);
 		}
 	}
+
+	@Post('/suggestions', { rateLimit: { limit: 100 } })
+	async suggestions(req: AuthenticatedRequest, _: Response, @Body payload: { prompt: string }) {
+		try {
+			const actions = await this.aiService.getSuggestions(payload.prompt);
+			return { actions };
+		} catch (e) {
+			assert(e instanceof Error);
+			throw new InternalServerError(e.message, e);
+		}
+	}
 }
