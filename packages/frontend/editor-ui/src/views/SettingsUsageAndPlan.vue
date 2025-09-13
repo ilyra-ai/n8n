@@ -156,6 +156,10 @@ const openCommunityRegisterModal = () => {
 		},
 	});
 };
+
+const togglePlans = () => {
+	usageStore.setPlansEnabled(!usageStore.plansEnabled);
+};
 </script>
 
 <template>
@@ -164,6 +168,10 @@ const openCommunityRegisterModal = () => {
 			locale.baseText('settings.usageAndPlan.title')
 		}}</n8n-heading>
 		<div v-if="!usageStore.isLoading">
+			<N8nButton
+				:label="usageStore.plansEnabled ? 'Disable plan restrictions' : 'Enable plan restrictions'"
+				@click="togglePlans"
+			/>
 			<n8n-heading tag="h3" :class="$style.title" size="large">
 				<I18nT keypath="settings.usageAndPlan.description" tag="span" scope="global">
 					<template #name>{{ badgedPlanName.name ?? usageStore.planName }}</template>
