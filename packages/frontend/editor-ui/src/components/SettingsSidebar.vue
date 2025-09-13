@@ -25,20 +25,28 @@ const settingsStore = useSettingsStore();
 const uiStore = useUIStore();
 
 const sidebarMenuItems = computed<IMenuItem[]>(() => {
-	const menuItems: IMenuItem[] = [
-		{
-			id: 'settings-usage-and-plan',
-			icon: 'chart-column-decreasing',
-			label: i18n.baseText('settings.usageAndPlan.title'),
-			position: 'top',
-			available: canUserAccessRouteByName(VIEWS.USAGE),
-			route: { to: { name: VIEWS.USAGE } },
-		},
-		{
-			id: 'settings-personal',
-			icon: 'circle-user-round',
-			label: i18n.baseText('settings.personal'),
-			position: 'top',
+        const menuItems: IMenuItem[] = [
+                {
+                        id: 'settings-usage-and-plan',
+                        icon: 'chart-column-decreasing',
+                        label: i18n.baseText('settings.usageAndPlan.title'),
+                        position: 'top',
+                        available: canUserAccessRouteByName(VIEWS.USAGE),
+                        route: { to: { name: VIEWS.USAGE } },
+                },
+                {
+                        id: 'settings-license',
+                        icon: 'key',
+                        label: i18n.baseText('settings.license'),
+                        position: 'top',
+                        available: canUserAccessRouteByName(VIEWS.LICENSE_SETTINGS),
+                        route: { to: { name: VIEWS.LICENSE_SETTINGS } },
+                },
+                {
+                        id: 'settings-personal',
+                        icon: 'circle-user-round',
+                        label: i18n.baseText('settings.personal'),
+                        position: 'top',
 			available: canUserAccessRouteByName(VIEWS.PERSONAL_SETTINGS),
 			route: { to: { name: VIEWS.PERSONAL_SETTINGS } },
 		},
