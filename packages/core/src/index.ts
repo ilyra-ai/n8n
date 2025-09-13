@@ -17,3 +17,4 @@ export * from './ai-suggestions';
 export * from './interfaces';
 export * from './node-execute-functions';
 export { NodeExecuteFunctions };
+export * from './queue';
