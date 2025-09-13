@@ -3,87 +3,103 @@ import { NodeConnectionTypes } from 'n8n-workflow';
 
 import type { NodeSearchResult } from '../../types/nodes';
 
-/**
- * Scoring weights for different match types
- */
 export const SCORE_WEIGHTS = {
-	NAME_CONTAINS: 10,
-	DISPLAY_NAME_CONTAINS: 8,
-	DESCRIPTION_CONTAINS: 5,
-	ALIAS_CONTAINS: 8,
-	NAME_EXACT: 20,
-	DISPLAY_NAME_EXACT: 15,
-	CONNECTION_EXACT: 100,
-	CONNECTION_IN_EXPRESSION: 50,
+        NAME_CONTAINS: 10,
+        DISPLAY_NAME_CONTAINS: 8,
+        DESCRIPTION_CONTAINS: 5,
+        ALIAS_CONTAINS: 8,
+        NAME_EXACT: 20,
+        DISPLAY_NAME_EXACT: 15,
+        CONNECTION_EXACT: 100,
+        CONNECTION_IN_EXPRESSION: 50,
 } as const;
 
-/**
- * Pure business logic for searching nodes
- * Separated from tool infrastructure for better testability
- */
+type ProcessedNode = {
+        node: INodeTypeDescription;
+        normalizedName: string;
+        normalizedDisplayName: string;
+        normalizedDescription: string;
+        normalizedAlias: string[];
+};
+
 export class NodeSearchEngine {
-	constructor(private readonly nodeTypes: INodeTypeDescription[]) {}
+        private processed: ProcessedNode[];
+        private nameSearchCache = new Map<string, NodeSearchResult[]>();
+        private connectionSearchCache = new Map<string, NodeSearchResult[]>();
 
-	/**
-	 * Search nodes by name, display name, or description
-	 * @param query - The search query string
-	 * @param limit - Maximum number of results to return
-	 * @returns Array of matching nodes sorted by relevance
-	 */
-	searchByName(query: string, limit: number = 20): NodeSearchResult[] {
-		const normalizedQuery = query.toLowerCase();
-		const results: NodeSearchResult[] = [];
+        constructor(nodeTypes: INodeTypeDescription[]) {
+                this.processed = nodeTypes.map((nt) => ({
+                        node: nt,
+                        normalizedName: NodeSearchEngine.normalize(nt.name),
+                        normalizedDisplayName: NodeSearchEngine.normalize(nt.displayName),
+                        normalizedDescription: nt.description
+                                ? NodeSearchEngine.normalize(nt.description)
+                                : '',
+                        normalizedAlias:
+                                nt.codex?.alias?.map((a) => NodeSearchEngine.normalize(a)) ?? [],
+                }));
+        }
 
-		for (const nodeType of this.nodeTypes) {
-			try {
-				const score = this.calculateNameScore(nodeType, normalizedQuery);
-				if (score > 0) {
-					results.push(this.createSearchResult(nodeType, score));
-				}
-			} catch (error) {
-				// Ignore errors for now
-			}
-		}
+        private static normalize(text: string): string {
+                return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
 
-		return this.sortAndLimit(results, limit);
-	}
+        /**
+         * Search nodes by name, display name, or description
+         * @param query - The search query string
+         * @param limit - Maximum number of results to return
+         * @returns Array of matching nodes sorted by relevance
+         */
+        searchByName(query: string, limit: number = 20): NodeSearchResult[] {
+                const normalizedQuery = NodeSearchEngine.normalize(query);
+                const key = `${normalizedQuery}|${limit}`;
+                const cached = this.nameSearchCache.get(key);
+                if (cached) return cached;
+                const results: NodeSearchResult[] = [];
+                for (const p of this.processed) {
+                        try {
+                                const score = this.calculateNameScore(p, normalizedQuery);
+                                if (score > 0) results.push(this.createSearchResult(p.node, score));
+                        } catch (error) {}
+                }
+                const sorted = this.sortAndLimit(results, limit);
+                this.nameSearchCache.set(key, sorted);
+                return sorted;
+        }
 
-	/**
-	 * Search for sub-nodes that output a specific connection type
-	 * @param connectionType - The connection type to search for
-	 * @param limit - Maximum number of results
-	 * @param nameFilter - Optional name filter
-	 * @returns Array of matching sub-nodes
-	 */
-	searchByConnectionType(
-		connectionType: NodeConnectionType,
-		limit: number = 20,
-		nameFilter?: string,
-	): NodeSearchResult[] {
-		const results: NodeSearchResult[] = [];
-		const normalizedFilter = nameFilter?.toLowerCase();
-
-		for (const nodeType of this.nodeTypes) {
-			try {
-				const connectionScore = this.getConnectionScore(nodeType, connectionType);
-				if (connectionScore > 0) {
-					// Apply name filter if provided
-					const nameScore = normalizedFilter
-						? this.calculateNameScore(nodeType, normalizedFilter)
-						: 0;
-
-					if (!normalizedFilter || nameScore > 0) {
-						const totalScore = connectionScore + nameScore;
-						results.push(this.createSearchResult(nodeType, totalScore));
-					}
-				}
-			} catch (error) {
-				// Ignore errors for now
-			}
-		}
-
-		return this.sortAndLimit(results, limit);
-	}
+        /**
+         * Search for sub-nodes that output a specific connection type
+         * @param connectionType - The connection type to search for
+         * @param limit - Maximum number of results
+         * @param nameFilter - Optional name filter
+         * @returns Array of matching sub-nodes
+         */
+        searchByConnectionType(
+                connectionType: NodeConnectionType,
+                limit: number = 20,
+                nameFilter?: string,
+        ): NodeSearchResult[] {
+                const normalizedFilter = nameFilter ? NodeSearchEngine.normalize(nameFilter) : undefined;
+                const key = `${connectionType}|${normalizedFilter ?? ''}|${limit}`;
+                const cached = this.connectionSearchCache.get(key);
+                if (cached) return cached;
+                const results: NodeSearchResult[] = [];
+                for (const p of this.processed) {
+                        try {
+                                const connectionScore = this.getConnectionScore(p.node, connectionType);
+                                if (connectionScore > 0) {
+                                        const nameScore = normalizedFilter ? this.calculateNameScore(p, normalizedFilter) : 0;
+                                        if (!normalizedFilter || nameScore > 0) {
+                                                const totalScore = connectionScore + nameScore;
+                                                results.push(this.createSearchResult(p.node, totalScore));
+                                        }
+                                }
+                        } catch (error) {}
+                }
+                const sorted = this.sortAndLimit(results, limit);
+                this.connectionSearchCache.set(key, sorted);
+                return sorted;
+        }
 
 	/**
 	 * Format search results for tool output
@@ -100,45 +116,16 @@ export class NodeSearchEngine {
 		</node>`;
 	}
 
-	/**
-	 * Calculate score based on name matches
-	 * @param nodeType - Node type to score
-	 * @param normalizedQuery - Lowercase search query
-	 * @returns Numeric score
-	 */
-	private calculateNameScore(nodeType: INodeTypeDescription, normalizedQuery: string): number {
-		let score = 0;
-
-		// Check name match
-		if (nodeType.name.toLowerCase().includes(normalizedQuery)) {
-			score += SCORE_WEIGHTS.NAME_CONTAINS;
-		}
-
-		// Check display name match
-		if (nodeType.displayName.toLowerCase().includes(normalizedQuery)) {
-			score += SCORE_WEIGHTS.DISPLAY_NAME_CONTAINS;
-		}
-
-		// Check description match
-		if (nodeType.description?.toLowerCase().includes(normalizedQuery)) {
-			score += SCORE_WEIGHTS.DESCRIPTION_CONTAINS;
-		}
-
-		// Check alias match
-		if (nodeType.codex?.alias?.some((alias) => alias.toLowerCase().includes(normalizedQuery))) {
-			score += SCORE_WEIGHTS.ALIAS_CONTAINS;
-		}
-
-		// Check exact matches (boost score)
-		if (nodeType.name.toLowerCase() === normalizedQuery) {
-			score += SCORE_WEIGHTS.NAME_EXACT;
-		}
-		if (nodeType.displayName.toLowerCase() === normalizedQuery) {
-			score += SCORE_WEIGHTS.DISPLAY_NAME_EXACT;
-		}
-
-		return score;
-	}
+        private calculateNameScore(node: ProcessedNode, normalizedQuery: string): number {
+                let score = 0;
+                if (node.normalizedName.includes(normalizedQuery)) score += SCORE_WEIGHTS.NAME_CONTAINS;
+                if (node.normalizedDisplayName.includes(normalizedQuery)) score += SCORE_WEIGHTS.DISPLAY_NAME_CONTAINS;
+                if (node.normalizedDescription.includes(normalizedQuery)) score += SCORE_WEIGHTS.DESCRIPTION_CONTAINS;
+                if (node.normalizedAlias.some((alias) => alias.includes(normalizedQuery))) score += SCORE_WEIGHTS.ALIAS_CONTAINS;
+                if (node.normalizedName === normalizedQuery) score += SCORE_WEIGHTS.NAME_EXACT;
+                if (node.normalizedDisplayName === normalizedQuery) score += SCORE_WEIGHTS.DISPLAY_NAME_EXACT;
+                return score;
+        }
 
 	/**
 	 * Check if a node has a specific connection type in outputs
