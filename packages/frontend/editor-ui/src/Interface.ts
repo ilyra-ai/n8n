@@ -1084,6 +1084,7 @@ export type UsageState = {
 		};
 		managementToken?: string;
 	};
+	plansEnabled: boolean;
 };
 
 export type NodeAuthenticationOption = {

@@ -16,6 +16,7 @@ export type UsageTelemetry = {
 const DEFAULT_PLAN_NAME = 'Community';
 const DEFAULT_STATE: UsageState = {
 	loading: true,
+	plansEnabled: true,
 	data: {
 		usage: {
 			activeWorkflowTriggers: {
@@ -41,18 +42,23 @@ export const useUsageStore = defineStore('usage', () => {
 
 	const state = reactive<UsageState>({ ...DEFAULT_STATE });
 
+	const plansEnabled = computed(() => state.plansEnabled);
 	const planName = computed(() => state.data.license.planName || DEFAULT_PLAN_NAME);
 	const planId = computed(() => state.data.license.planId);
-	const activeWorkflowTriggersLimit = computed(() => state.data.usage.activeWorkflowTriggers.limit);
+	const activeWorkflowTriggersLimit = computed(() =>
+		state.plansEnabled ? state.data.usage.activeWorkflowTriggers.limit : -1,
+	);
 	const activeWorkflowTriggersCount = computed(() => state.data.usage.activeWorkflowTriggers.value);
-	const workflowsWithEvaluationsLimit = computed(
-		() => state.data.usage.workflowsHavingEvaluations.limit,
+	const workflowsWithEvaluationsLimit = computed(() =>
+		state.plansEnabled ? state.data.usage.workflowsHavingEvaluations.limit : -1,
 	);
 	const workflowsWithEvaluationsCount = computed(
 		() => state.data.usage.workflowsHavingEvaluations.value,
 	);
-	const executionPercentage = computed(
-		() => (activeWorkflowTriggersCount.value / activeWorkflowTriggersLimit.value) * 100,
+	const executionPercentage = computed(() =>
+		activeWorkflowTriggersLimit.value > 0
+			? (activeWorkflowTriggersCount.value / activeWorkflowTriggersLimit.value) * 100
+			: 0,
 	);
 	const instanceId = computed(() => settingsStore.settings.instanceId);
 	const managementToken = computed(() => state.data.managementToken);
@@ -72,6 +78,10 @@ export const useUsageStore = defineStore('usage', () => {
 
 	const setData = (data: UsageState['data']) => {
 		state.data = data;
+	};
+
+	const setPlansEnabled = (value: boolean) => {
+		state.plansEnabled = value;
 	};
 
 	const getLicenseInfo = async () => {
@@ -106,10 +116,12 @@ export const useUsageStore = defineStore('usage', () => {
 		setLoading,
 		getLicenseInfo,
 		setData,
+		setPlansEnabled,
 		activateLicense,
 		refreshLicenseManagementToken,
 		requestEnterpriseLicenseTrial,
 		registerCommunityEdition,
+		plansEnabled,
 		planName,
 		planId,
 		activeWorkflowTriggersLimit,
