@@ -4,15 +4,18 @@ import type {
 	INodeTypeData,
 	WorkflowTestData,
 } from 'n8n-workflow';
-import { NodeConnectionTypes } from 'n8n-workflow';
+const { NodeConnectionTypes } = require('n8n-workflow');
 
-import { If } from '../../../nodes-base/dist/nodes/If/If.node';
-import { ManualTrigger } from '../../../nodes-base/dist/nodes/ManualTrigger/ManualTrigger.node';
-import { Merge } from '../../../nodes-base/dist/nodes/Merge/Merge.node';
-import { NoOp } from '../../../nodes-base/dist/nodes/NoOp/NoOp.node';
-import { Set } from '../../../nodes-base/dist/nodes/Set/Set.node';
-import { SplitInBatches } from '../../../nodes-base/dist/nodes/SplitInBatches/SplitInBatches.node';
-import { Start } from '../../../nodes-base/dist/nodes/Start/Start.node';
+import { If } from '../../../nodes-base/nodes/If/If.node';
+import { ManualTrigger } from '../../../nodes-base/nodes/ManualTrigger/ManualTrigger.node';
+import { Merge } from '../../../nodes-base/nodes/Merge/Merge.node';
+import { NoOp } from '../../../nodes-base/nodes/NoOp/NoOp.node';
+import { Set } from '../../../nodes-base/nodes/Set/Set.node';
+import { SplitInBatches } from '../../../nodes-base/nodes/SplitInBatches/SplitInBatches.node';
+import { Start } from '../../../nodes-base/nodes/Start/Start.node';
+import { Code } from '../../../nodes-base/nodes/Code/Code.node';
+import { StickyNote } from '../../../nodes-base/nodes/StickyNote/StickyNote.node';
+import { Function as FunctionNode } from '../../../nodes-base/nodes/Function/Function.node';
 
 export const predefinedNodesTypes: INodeTypeData = {
 	'n8n-nodes-base.if': {
@@ -41,6 +44,18 @@ export const predefinedNodesTypes: INodeTypeData = {
 	},
 	'n8n-nodes-base.splitInBatches': {
 		type: new SplitInBatches(),
+		sourcePath: '',
+	},
+	'n8n-nodes-base.code': {
+		type: new Code(),
+		sourcePath: '',
+	},
+	'n8n-nodes-base.stickyNote': {
+		type: new StickyNote(),
+		sourcePath: '',
+	},
+	'n8n-nodes-base.function': {
+		type: new FunctionNode(),
 		sourcePath: '',
 	},
 	'@n8n/n8n-nodes-langchain.toolExecutor': {

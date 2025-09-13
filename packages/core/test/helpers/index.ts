@@ -92,22 +92,30 @@ export function getNodeTypes(testData: WorkflowTestData[] | WorkflowTestData) {
 
 	const nodeNames = nodes.map((n) => n.type);
 
-	const knownNodes = readJsonFileSync<Record<string, NodeLoadingDetails>>(
-		path.join(BASE_DIR, 'nodes-base/dist/known/nodes.json'),
-	);
+	let knownNodes: Record<string, NodeLoadingDetails> = {};
+	try {
+		knownNodes = readJsonFileSync<Record<string, NodeLoadingDetails>>(
+			path.join(BASE_DIR, 'nodes-base/dist/known/nodes.json'),
+		);
+	} catch {}
 
 	for (const nodeName of nodeNames) {
 		const loadInfo = knownNodes[nodeName.replace('n8n-nodes-base.', '')];
-		if (!loadInfo) {
-			throw new UnrecognizedNodeTypeError('n8n-nodes-base', nodeName);
+		if (loadInfo) {
+			const sourcePath = loadInfo.sourcePath.replace(/^dist\//, './').replace(/\.js$/, '.ts');
+			const nodeSourcePath = path.join(BASE_DIR, 'nodes-base', sourcePath);
+			const node = new (require(nodeSourcePath)[loadInfo.className])() as INodeType;
+			nodeTypes[nodeName] = {
+				sourcePath: '',
+				type: node,
+			};
+			continue;
 		}
-		const sourcePath = loadInfo.sourcePath.replace(/^dist\//, './').replace(/\.js$/, '.ts');
-		const nodeSourcePath = path.join(BASE_DIR, 'nodes-base', sourcePath);
-		const node = new (require(nodeSourcePath)[loadInfo.className])() as INodeType;
-		nodeTypes[nodeName] = {
-			sourcePath: '',
-			type: node,
-		};
+		if (predefinedNodesTypes[nodeName]) {
+			nodeTypes[nodeName] = predefinedNodesTypes[nodeName];
+			continue;
+		}
+		throw new UnrecognizedNodeTypeError('n8n-nodes-base', nodeName);
 	}
 
 	return nodeTypes;
