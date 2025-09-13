@@ -42,6 +42,7 @@ const SettingsPersonalView = async () => await import('./views/SettingsPersonalV
 const SettingsUsersView = async () => await import('./views/SettingsUsersView.vue');
 const SettingsCommunityNodesView = async () =>
 	await import('./views/SettingsCommunityNodesView.vue');
+const PluginsCatalogView = async () => await import('./views/PluginsCatalogView.vue');
 const SettingsApiView = async () => await import('./views/SettingsApiView.vue');
 const SettingsLogStreamingView = async () => await import('./views/SettingsLogStreamingView.vue');
 const SetupView = async () => await import('./views/SetupView.vue');
@@ -80,6 +81,17 @@ export const routes: RouteRecordRaw[] = [
 	{
 		path: '/',
 		redirect: '/home/workflows',
+		meta: {
+			middleware: ['authenticated'],
+		},
+	},
+	{
+		path: '/plugins',
+		name: VIEWS.PLUGIN_CATALOG,
+		components: {
+			default: PluginsCatalogView,
+			sidebar: MainSidebar,
+		},
 		meta: {
 			middleware: ['authenticated'],
 		},
