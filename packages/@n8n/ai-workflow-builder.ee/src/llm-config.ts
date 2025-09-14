@@ -1,5 +1,5 @@
 // Different LLMConfig type for this file - specific to LLM providers
-interface LLMProviderConfig {
+export interface LLMProviderConfig {
 	apiKey: string;
 	baseUrl?: string;
 	headers?: Record<string, string>;
