@@ -2,6 +2,7 @@ import type { INodeTypeDescription, NodeConnectionType } from 'n8n-workflow';
 import { NodeConnectionTypes } from 'n8n-workflow';
 import type { NodeSearchResult } from '../../types/nodes';
 import { DEFAULT_SYNONYMS } from './synonyms';
+import { PersistentCache } from './persistent-cache';
 
 export const SCORE_WEIGHTS = {
         NAME_CONTAINS: 10,
@@ -24,8 +25,7 @@ type ProcessedNode = {
 
 export class NodeSearchEngine {
         private processed: ProcessedNode[];
-        private nameSearchCache = new Map<string, NodeSearchResult[]>();
-        private connectionSearchCache = new Map<string, NodeSearchResult[]>();
+        private cache = new PersistentCache<NodeSearchResult[]>();
         private synonymMap = new Map<string, string>();
         constructor(
                 nodeTypes: INodeTypeDescription[],
@@ -60,8 +60,8 @@ export class NodeSearchEngine {
         searchByName(query: string, limit: number = 20): NodeSearchResult[] {
                 const normalizedQuery = NodeSearchEngine.normalize(query);
                 const canonicalQuery = this.synonymMap.get(normalizedQuery) ?? normalizedQuery;
-                const key = `${canonicalQuery}|${limit}`;
-                const cached = this.nameSearchCache.get(key);
+                const key = `n|${canonicalQuery}|${limit}`;
+                const cached = this.cache.get(key);
                 if (cached) return cached;
                 const results: NodeSearchResult[] = [];
                 for (const p of this.processed) {
@@ -71,7 +71,7 @@ export class NodeSearchEngine {
                         } catch (error) {}
                 }
                 const sorted = this.sortAndLimit(results, limit);
-                this.nameSearchCache.set(key, sorted);
+                this.cache.set(key, sorted);
                 return sorted;
         }
 
@@ -91,8 +91,8 @@ export class NodeSearchEngine {
                 const canonicalFilter = normalizedFilter
                         ? this.synonymMap.get(normalizedFilter) ?? normalizedFilter
                         : undefined;
-                const key = `${connectionType}|${canonicalFilter ?? ''}|${limit}`;
-                const cached = this.connectionSearchCache.get(key);
+                const key = `c|${connectionType}|${canonicalFilter ?? ''}|${limit}`;
+                const cached = this.cache.get(key);
                 if (cached) return cached;
                 const results: NodeSearchResult[] = [];
                 for (const p of this.processed) {
@@ -108,7 +108,7 @@ export class NodeSearchEngine {
                         } catch (error) {}
                 }
                 const sorted = this.sortAndLimit(results, limit);
-                this.connectionSearchCache.set(key, sorted);
+                this.cache.set(key, sorted);
                 return sorted;
         }
 

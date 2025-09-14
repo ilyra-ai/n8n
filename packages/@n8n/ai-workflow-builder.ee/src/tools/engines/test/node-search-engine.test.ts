@@ -6,6 +6,9 @@ import {
 
 import { createNodeType } from '../../../../test/test-utils';
 import { NodeSearchEngine, SCORE_WEIGHTS } from '../node-search-engine';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 describe('NodeSearchEngine', () => {
 	let searchEngine: NodeSearchEngine;
@@ -407,9 +410,9 @@ describe('NodeSearchEngine', () => {
 		});
 	});
 
-	describe('edge cases and error handling', () => {
-		it('should handle empty node types array', () => {
-			const emptyEngine = new NodeSearchEngine([]);
+        describe('edge cases and error handling', () => {
+                it('should handle empty node types array', () => {
+                        const emptyEngine = new NodeSearchEngine([]);
 
 			expect(emptyEngine.searchByName('test')).toEqual([]);
 			expect(emptyEngine.searchByConnectionType(NodeConnectionTypes.AiTool)).toEqual([]);
@@ -445,7 +448,28 @@ describe('NodeSearchEngine', () => {
 
 			specialChars.forEach((char) => {
 				expect(() => searchEngine.searchByName(char)).not.toThrow();
-			});
-		});
-	});
+                });
+        });
+
+        describe('persistent cache', () => {
+                it('persists search results across instances', () => {
+                        const dir = mkdtempSync(join(tmpdir(), 'cache-'));
+                        process.env.AI_PERSISTENT_CACHE_PATH = join(dir, 'cache.json');
+                        const nodes = [
+                                createNodeType({
+                                        name: 'test.persistent',
+                                        displayName: 'Persistent',
+                                        description: 'Persist',
+                                }),
+                        ];
+                        const engine1 = new NodeSearchEngine(nodes);
+                        const first = engine1.searchByName('persistent');
+                        expect(first).toHaveLength(1);
+                        const engine2 = new NodeSearchEngine([]);
+                        const second = engine2.searchByName('persistent');
+                        expect(second).toHaveLength(1);
+                        rmSync(dir, { recursive: true, force: true });
+                        delete process.env.AI_PERSISTENT_CACHE_PATH;
+                });
+        });
 });
